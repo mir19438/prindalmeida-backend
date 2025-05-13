@@ -405,45 +405,6 @@ class AuthController extends Controller
         ], 200);
     }
 
-    // user profile update by id
-    public function updateProfile(Request $request)
-    {
-        // validation roles
-        $validator = Validator::make($request->all(), [
-            'name'           => 'sometimes|string|max:255',
-            'bio'            => 'sometimes|string',
-
-        ]);
-
-        // check validation
-        if ($validator->fails()) {
-            return response()->json([
-                'status'    => false,
-                'message'   => $validator->errors()
-            ], 422);
-        }
-
-        $user = User::find(Auth::id());
-
-        // User Not Found
-        if (!$user) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'User not found',
-            ], 404);
-        }
-
-        // update user name and bio
-        $user->name = $request->name;
-        $user->bio = $request->bio;
-        $user->save();
-
-        return response()->json([
-            'status'  => true,
-            'message' => 'Profile updated successfully!',
-        ]);
-    }
-
     // user update your account password
     public function updatePassword(Request $request)
     {

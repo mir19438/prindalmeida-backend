@@ -24,6 +24,8 @@ return new class extends Migration
             $table->longText('bio')->nullable();
             $table->string('avatar')->default('default/user.png');
             $table->enum('status',['active','inactive'])->default('active');
+            $table->string('contact_number')->nullable();
+            $table->string('location')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

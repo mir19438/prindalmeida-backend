@@ -1,14 +1,10 @@
 <?php
 
-use App\Http\Controllers\Admin\UserManageController;
+use App\Http\Controllers\Admin\MyProfileController;
 use App\Http\Controllers\Auth\AuthController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\User\PostController;
+use App\Http\Controllers\User\ProfileController;
 use Illuminate\Support\Facades\Route;
-
-
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
 
 // public route for user
 Route::post('/register', [AuthController::class, 'register']);
@@ -21,21 +17,19 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::middleware('auth:api')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::get('/profile', [AuthController::class, 'profile']);
-    Route::post('/update-profile', [AuthController::class, 'updateProfile']);
     Route::post('/update-password', [AuthController::class, 'updatePassword']);
-    Route::post('/avatar', [AuthController::class, 'avatar']);
-    Route::post('/update-avatar', [AuthController::class, 'updateAvatar']);
 
     // admin
     Route::middleware('admin')->group(function () {
-        Route::post('/admin', [UserManageController::class, 'admin']);
+        Route::post('/update-admin-profile', [MyProfileController::class, 'updateAdminProfile']);
     });
 
 
     // user
     Route::middleware('user')->group(function () {
-        Route::post('/user', [UserManageController::class, 'user']);
+        Route::post('/update-user-profile', [ProfileController::class, 'updateUserProfile']);
+        Route::post('/create-post', [PostController::class, 'createPost']);
+        Route::get('/get-post', [PostController::class, 'getPost']);
     });
-
 
 });
