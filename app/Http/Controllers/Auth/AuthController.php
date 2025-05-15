@@ -56,7 +56,8 @@ class AuthController extends Controller
 
         // validation roles
         $validator = Validator::make($request->all(), [
-            'user_name'             => 'required|string|max:255',
+            'full_name'             => 'required|string|max:255',
+            'user_name'             => 'sometimes|max:255',
             'email'                 => 'required|string|email|max:255|unique:users,email',
             'password'              => 'required|string|min:6|confirmed',
         ]);
@@ -70,7 +71,8 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'name'      => $request->user_name,
+            'name'           => ucfirst($request->full_name),
+            'user_name'      => '@' . ucfirst($request->user_name) . '_' . rand(0, 9) ?? '@' . explode(' ', trim($request->full_name))[0] . '_' . rand(0, 9),
             'email'          => $request->email,
             'password'       => Hash::make($request->password),
             'status'         => 'inactive',
@@ -86,7 +88,7 @@ class AuthController extends Controller
 
         // json response
         return response()->json([
-            'ok' => true,
+            'status' => true,
             'message' => 'Register successfully, OTP send you email, please verify your account'
         ], 201);
     }

@@ -21,15 +21,24 @@ Route::middleware('auth:api')->group(function () {
 
     // admin
     Route::middleware('admin')->group(function () {
+        // profile
         Route::post('/update-admin-profile', [MyProfileController::class, 'updateAdminProfile']);
     });
 
 
     // user
     Route::middleware('user')->group(function () {
-        Route::post('/update-user-profile', [ProfileController::class, 'updateUserProfile']);
+        // post
         Route::post('/create-post', [PostController::class, 'createPost']);
-        Route::get('/get-post', [PostController::class, 'getPost']);
-    });
+        Route::get('/discovery', [PostController::class, 'discovery']);
+        Route::post('/discovery-toggle-follow', [PostController::class, 'discoveryToggleFollow']);
+        Route::get('/following', [PostController::class, 'following']);
 
+        // profile
+        Route::post('/update-user-profile', [ProfileController::class, 'updateUserProfile']);
+        Route::get('/get-following', [ProfileController::class, 'getFollowing']);
+        Route::get('/get-follower', [ProfileController::class, 'getFollower']);
+        Route::post('/recent-post', [ProfileController::class, 'recentPost']);
+        Route::get('/get-recent-post', [ProfileController::class, 'getRecentPost']);
+    });
 });

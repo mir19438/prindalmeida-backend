@@ -53,4 +53,9 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    // যাদের follow করছে (যাকে follow করছে তারা)
+    public function followers()
+    {
+        return $this->hasMany(follower::class);
+    }
 }
