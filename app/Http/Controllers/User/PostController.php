@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\follower;
+use App\Models\Follower;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -65,6 +65,7 @@ class PostController extends Controller
             'description' => $request->description,
             'rating'      => $request->rating,
             'tagged'      => json_encode($request->tagged),
+            'tagged_count' => count($request->tagged) - 1,
             'photo'       => json_encode($paths) ?? null
         ]);
 
@@ -75,12 +76,64 @@ class PostController extends Controller
         ]);
     }
 
-    public function discovery()
+    public function searchFollower(Request $request)
+    {
+        $followers_id = Follower::where('user_id', Auth::id())->pluck('follower_id');
+        $followers = User::select('id', 'name', 'avatar')->whereIn('id', $followers_id);
+        if ($request->filled('search')) {
+            $followers = $followers->where('name', 'LIKE', "%" . $request->search . "%");
+        }
+        $followers = $followers->paginate($request->per_page ?? 10);
+        if ($followers->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No users found',
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Search result',
+            'data' => $followers,
+        ]);
+    }
+
+    public function following(Request $request)
     {
 
-        $posts = Post::all();
+        $posts = Post::where('status', 'approved')->get();
 
-        if (count($posts) <= 0) {
+        if ($posts->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No following posts',
+            ]);
+        }
+
+
+        $followings_id = Follower::where('follower_id', Auth::id())->get()->pluck('user_id');
+
+        $followings = Post::whereIn('user_id', $followings_id)->paginate($request->per_page ?? 10);
+
+
+        foreach ($followings as $following) {
+            $following->tagged = json_decode($following->tagged);
+            $following->photo = json_decode($following->photo);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Following all posts',
+            'data' => $followings
+        ]);
+    }
+
+    public function discovery(Request $request)
+    {
+
+        $posts = Post::where('status', 'approved')->paginate($request->per_page ?? 10);
+
+        if ($posts->isEmpty()) {
             return response()->json([
                 'status' => false,
                 'message' => 'No discovery posts',
@@ -95,7 +148,8 @@ class PostController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Discovery',
-            'data' => $posts
+            'data' => $posts,
+
         ]);
     }
 
@@ -105,7 +159,6 @@ class PostController extends Controller
         $targetId = Auth::id();
 
         $user = User::where('id', $userId)->first();
-
         if (!$user) {
             return response()->json([
                 'status' => false,
@@ -113,7 +166,15 @@ class PostController extends Controller
             ]);
         }
 
-        $exists = follower::where('user_id', $userId)
+        if ($user->verified_status == 'unverified') {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not verified'
+            ]);
+        }
+
+
+        $exists = Follower::where('user_id', $userId)
             ->where('follower_id', $targetId)
             ->first();
 
@@ -133,30 +194,5 @@ class PostController extends Controller
                 'message' => 'followed'
             ]);
         }
-    }
-
-    public function following()
-    {
-
-        $posts = Post::all();
-
-        if (count($posts) <= 0) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No following posts',
-            ]);
-        }
-
-        $followings_id = Follower::where('follower_id', Auth::id())->get()->pluck('user_id');
-
-        $followings = Post::whereIn('user_id', $followings_id)->get();
-
-
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Following all posts',
-            'data' => $followings
-        ]);
     }
 }

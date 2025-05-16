@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('rating');
             $table->json('photo');
             $table->json('tagged')->nullable();
+            $table->unsignedBigInteger('tagged_count')->default(0);
+            $table->enum('status',['pending','approved','canceled'])->default('pending');
             $table->timestamps();
         });
     }

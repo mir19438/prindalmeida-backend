@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\MyProfileController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\User\BookmarkController;
 use App\Http\Controllers\User\PostController;
 use App\Http\Controllers\User\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -28,11 +29,20 @@ Route::middleware('auth:api')->group(function () {
 
     // user
     Route::middleware('user')->group(function () {
-        // post
-        Route::post('/create-post', [PostController::class, 'createPost']);
+
+        // bookmark
+        Route::post('/toggle-bookmark', [BookmarkController::class, 'toggleBookmark']);
+        Route::get('/get-bookmarks', [BookmarkController::class, 'getBookmarks']);
+        Route::get('/view-post', [BookmarkController::class, 'viewPost']);
+
+        // home
         Route::get('/discovery', [PostController::class, 'discovery']);
         Route::post('/discovery-toggle-follow', [PostController::class, 'discoveryToggleFollow']);
         Route::get('/following', [PostController::class, 'following']);
+
+        // post
+        Route::post('/create-post', [PostController::class, 'createPost']);
+        Route::get('/search-follower', [PostController::class, 'searchFollower']);
 
         // profile
         Route::post('/update-user-profile', [ProfileController::class, 'updateUserProfile']);
@@ -40,5 +50,6 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/get-follower', [ProfileController::class, 'getFollower']);
         Route::post('/recent-post', [ProfileController::class, 'recentPost']);
         Route::get('/get-recent-post', [ProfileController::class, 'getRecentPost']);
+        Route::get('/get-post', [ProfileController::class, 'getPost']);
     });
 });

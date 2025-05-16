@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('123456'),
             'email_verified_at' => now(),
             'role' => 'ADMIN',
+            'verified_status' => 'verified',
+            'profile_status' => 'admin'
         ]);
     }
 }

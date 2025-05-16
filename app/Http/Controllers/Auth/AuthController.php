@@ -34,7 +34,7 @@ class AuthController extends Controller
         // rear case handle
         $rearUser = User::where('email', $request->email)->first();
 
-        if (($rearUser && $rearUser->status == 'inactive')) {
+        if (($rearUser && $rearUser->verified_status == 'unverified')) {
 
             // update otp and otp expires
             $rearUser->otp = $otp;
@@ -75,7 +75,6 @@ class AuthController extends Controller
             'user_name'      => '@' . ucfirst($request->user_name) . '_' . rand(0, 9) ?? '@' . explode(' ', trim($request->full_name))[0] . '_' . rand(0, 9),
             'email'          => $request->email,
             'password'       => Hash::make($request->password),
-            'status'         => 'inactive',
             'otp'            => $otp,
             'otp_expires_at' => $otp_expires_at,
         ], 201);
@@ -124,7 +123,7 @@ class AuthController extends Controller
             $user->otp                = null;
             $user->otp_expires_at     = null;
             $user->otp_verified_at    = Carbon::now();
-            $user->status             = 'active';
+            $user->verified_status    = 'verified';
             $user->save();
 
             // custom token time
@@ -184,7 +183,7 @@ class AuthController extends Controller
         $otp_expires_at = Carbon::now()->addMinutes(10);
 
         // email user check
-        if ($user->status == 'inactive') {
+        if ($user->verified_status == 'unverified') {
 
             // update otp and otp expired at
             $user->otp = $otp;
@@ -247,10 +246,10 @@ class AuthController extends Controller
         }
 
         // Check Account Status
-        if ($user->status != 'active') {
+        if ($user->verified_status != 'verified') {
             return response()->json([
                 'status' => false,
-                'message' => 'Your account is inactive. Please contact support.',
+                'message' => 'Your account is unverified. Please contact support.',
             ], 403);
         }
 
@@ -313,13 +312,13 @@ class AuthController extends Controller
         $otp = rand(100000, 999999);
         $otp_expires_at = Carbon::now()->addMinutes(10);
 
-        if ($user->status == 'active') {
+        if ($user->verified_status == 'verified') {
 
             // update otp and otp veridied and otp expired at
             $user->otp_verified_at = null;
             $user->otp             = $otp;
             $user->otp_expires_at  = $otp_expires_at;
-            $user->status          = 'inactive';
+            $user->verified_status          = 'unverified';
             $user->save();
         } else {
             return response()->json([
@@ -374,7 +373,7 @@ class AuthController extends Controller
             ], 404);
         };
 
-        if ($user->status == 'active') {
+        if ($user->verified_status == 'verified') {
             $user->password = Hash::make($request->password);
             $user->save();
             return response()->json([

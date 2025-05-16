@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Follower extends Model
+class Bookmark extends Model
 {
     use HasFactory;
 
@@ -15,10 +15,4 @@ class Follower extends Model
      * @var array
      */
     protected $guarded = ['id'];
-
-    // যে user follow করছে
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 }

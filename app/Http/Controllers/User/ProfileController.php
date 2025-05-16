@@ -11,7 +11,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use PhpParser\Node\Scalar\Float_;
 
 class ProfileController extends Controller
 {
@@ -70,13 +69,19 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function getFollowing()
+    public function getFollowing(Request $request)
     {
         $followings_id = Follower::where('follower_id', Auth::id())->get()->pluck('user_id');
 
-        $followings = User::select('id', 'name', 'avatar')->whereIn('id', $followings_id)->get();
+        $followings = User::select('id', 'name', 'avatar')->whereIn('id', $followings_id);
 
-        $followings = $followings->map(function ($follower) use ($followings_id) {
+        $followings = $followings->paginate($request->per_page ?? 10);
+
+        // $followings = $followings->map(function ($follower) use ($followings_id) {
+        //     $follower->status = $followings_id->contains($follower->id) ? 'following' : 'follow';
+        //     return $follower;
+        // });
+        $followings->getCollection()->transform(function ($follower) use ($followings_id) {
             $follower->status = $followings_id->contains($follower->id) ? 'following' : 'follow';
             return $follower;
         });
@@ -89,15 +94,20 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function getFollower()
+    public function getFollower(Request $request)
     {
         $followers_id = Follower::where('user_id', Auth::id())->pluck('follower_id');
         $followings_id = Follower::where('follower_id', Auth::id())->pluck('user_id');
 
         // followers list
-        $followers = User::select('id', 'name', 'avatar')->whereIn('id', $followers_id)->get();
+        $followers = User::select('id', 'name', 'avatar')->whereIn('id', $followers_id);
+        $followers = $followers->paginate($request->per_page ?? 10);
 
-        $followers = $followers->map(function ($follower) use ($followings_id) {
+        // $followers = $followers->map(function ($follower) use ($followings_id) {
+        //     $follower->status = $followings_id->contains($follower->id) ? 'following' : 'follow';
+        //     return $follower;
+        // });
+        $followers->getCollection()->transform(function ($follower) use ($followings_id) {
             $follower->status = $followings_id->contains($follower->id) ? 'following' : 'follow';
             return $follower;
         });
@@ -140,13 +150,36 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function getRecentPost()
+    public function getRecentPost(Request $request)
     {
-        $recent_post = RecentPost::latest()->get()->pluck('post_id');
+        $recent_posts_id = RecentPost::latest()->get()->pluck('post_id');
+        $recent_posts =  Post::whereIn('id', $recent_posts_id)->paginate($request->per_page ?? 10);
+
+        foreach ($recent_posts as $recent_post) {
+            $recent_post->tagged = json_decode($recent_post->tagged);
+            $recent_post->photo = json_decode($recent_post->photo);
+        }
+
         return response()->json([
             'status' => true,
             'message' => 'My recent posts',
-            'data' => Post::whereIn('id', $recent_post)->get()
+            'data' => $recent_posts
+        ]);
+    }
+
+    public function getPost(Request $request)
+    {
+        $my_posts = Post::where('user_id', Auth::id())->paginate($request->per_page??10);
+
+        foreach ($my_posts as $my_post) {
+            $my_post->tagged = json_decode($my_post->tagged);
+            $my_post->photo = json_decode($my_post->photo);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'My posts',
+            'data' => $my_posts
         ]);
     }
 }
