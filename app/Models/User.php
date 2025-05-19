@@ -58,4 +58,16 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(follower::class);
     }
+
+    // App\Models\User.php
+    public function latestApprovedPost()
+    {
+        return $this->hasOne(Post::class)->approved()->latestOfMany();
+    }
+
+    // In User.php
+    // public function latestApprovedPost()
+    // {
+    //     return $this->hasOne(Post::class)->where('post_status', 'approved')->latestOfMany();
+    // }
 }

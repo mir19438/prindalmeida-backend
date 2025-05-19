@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\Admin\MyProfileController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\User\BookmarkController;
 use App\Http\Controllers\User\PostController;
 use App\Http\Controllers\User\ProfileController;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 // public route for user
@@ -29,6 +33,11 @@ Route::middleware('auth:api')->group(function () {
 
     // user
     Route::middleware('user')->group(function () {
+
+        // notification
+        Route::get('/get-notifications',[NotificationController::class,'getNotifications']);
+        Route::get('/read',[NotificationController::class,'read']);
+        Route::get('/read-all',[NotificationController::class,'readAll']);
 
         // bookmark
         Route::post('/toggle-bookmark', [BookmarkController::class, 'toggleBookmark']);

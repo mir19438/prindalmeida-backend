@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('user_name')->nullable();
             $table->string('meal_name');
             $table->string('have_it');
             $table->string('food_type');
@@ -23,7 +24,7 @@ return new class extends Migration
             $table->json('photo');
             $table->json('tagged')->nullable();
             $table->unsignedBigInteger('tagged_count')->default(0);
-            $table->enum('status',['pending','approved','canceled'])->default('pending');
+            $table->enum('post_status',['pending','approved','canceled'])->default('approved');
             $table->timestamps();
         });
     }

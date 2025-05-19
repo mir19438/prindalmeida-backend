@@ -72,7 +72,7 @@ class AuthController extends Controller
 
         $user = User::create([
             'name'           => ucfirst($request->full_name),
-            'user_name'      => '@' . ucfirst($request->user_name) . '_' . rand(0, 9) ?? '@' . explode(' ', trim($request->full_name))[0] . '_' . rand(0, 9),
+            'user_name'      => $request->user_name? '@' . ucfirst($request->user_name) . '_' . rand(0, 9) : '@' . explode(' ', trim($request->full_name))[0] . '_' . rand(0, 9),
             'email'          => $request->email,
             'password'       => Hash::make($request->password),
             'otp'            => $otp,
