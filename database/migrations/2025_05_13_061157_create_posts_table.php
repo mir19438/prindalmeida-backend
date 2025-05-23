@@ -25,6 +25,7 @@ return new class extends Migration
             $table->json('tagged')->nullable();
             $table->unsignedBigInteger('tagged_count')->default(0);
             $table->enum('post_status',['pending','approved','canceled'])->default('approved');
+            $table->unsignedBigInteger('love_reacts')->default(0); // ❤️ love react counter
             $table->timestamps();
         });
     }

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Post extends Model
+class Like extends Model
 {
     use HasFactory;
 
@@ -15,15 +15,4 @@ class Post extends Model
      * @var array
      */
     protected $guarded = ['id'];
-
-    // App\Models\Post.php
-    public function scopeApproved($query)
-    {
-        return $query->where('post_status', 'approved');
-    }
-
-    public function comments()
-    {
-        return $this->hasMany(Comment::class, 'post_id');
-    }
 }

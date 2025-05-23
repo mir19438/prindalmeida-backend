@@ -23,8 +23,7 @@ class BookmarkController extends Controller
             ]);
         }
 
-
-        if ($post->status != 'approved') {
+        if ($post->post_status != 'approved') {
             return response()->json([
                 'status' => false,
                 'message' => 'Post not approved'
@@ -55,9 +54,19 @@ class BookmarkController extends Controller
 
     public function getBookmarks(Request $request)
     {
-        $bookmarks_id = Bookmark::all()->pluck('post_id');
+        $bookmarks_id = Bookmark::where('user_id', Auth::id())->pluck('post_id');
 
-        $posts = Post::where('id', $bookmarks_id)->latest()->paginate($request->per_page ?? 10);
+        $posts = Post::whereIn('id', $bookmarks_id)
+            ->latest()
+            ->paginate($request->per_page ?? 10);
+
+        if ($posts->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You have not bookmarked any posts'
+            ]);
+        }
+
 
         foreach ($posts as $post) {
             $post->tagged = json_decode($post->tagged);

@@ -82,7 +82,8 @@ class ProfileController extends Controller
         //     return $follower;
         // });
         $followings->getCollection()->transform(function ($follower) use ($followings_id) {
-            $follower->status = $followings_id->contains($follower->id) ? 'following' : 'follow';
+            // $follower->status = $followings_id->contains($follower->id) ? 'following' : 'follow';
+            $follower->status = 'Unfollowing';
             return $follower;
         });
 
@@ -108,7 +109,7 @@ class ProfileController extends Controller
         //     return $follower;
         // });
         $followers->getCollection()->transform(function ($follower) use ($followings_id) {
-            $follower->status = $followings_id->contains($follower->id) ? 'following' : 'follow';
+            $follower->status = $followings_id->contains($follower->id) ? 'Following' : 'Follow';
             return $follower;
         });
 
@@ -150,26 +151,65 @@ class ProfileController extends Controller
         ]);
     }
 
+    // public function getRecentPost(Request $request)
+    // {
+    //     $recent_posts = RecentPost::latest()->get();
+
+    //     $postIds = $recent_posts->pluck('post_id')->toArray();
+
+
+    //     // return $postIds;
+
+    //     $recent_posts =  Post::whereIn('id', $postIds)->paginate($request->per_page ?? 10);
+
+    //     foreach ($recent_posts as $recent_post) {
+    //         $recent_post->tagged = json_decode($recent_post->tagged);
+    //         $recent_post->photo = json_decode($recent_post->photo);
+    //     }
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'My recent posts',
+    //         'data' => $recent_posts
+    //     ]);
+    // }
+
     public function getRecentPost(Request $request)
     {
-        $recent_posts_id = RecentPost::latest()->get()->pluck('post_id');
-        $recent_posts =  Post::whereIn('id', $recent_posts_id)->paginate($request->per_page ?? 10);
+        $perPage = $request->per_page ?? 10;
 
-        foreach ($recent_posts as $recent_post) {
-            $recent_post->tagged = json_decode($recent_post->tagged);
-            $recent_post->photo = json_decode($recent_post->photo);
-        }
+        // Step 1: Get paginated recent posts
+        $recentPaginated = RecentPost::orderBy('created_at', 'desc')->paginate($perPage);
+
+        // Step 2: Collect post IDs in order
+        $postIds = $recentPaginated->pluck('post_id')->toArray();
+
+        // Step 3: Fetch posts maintaining the same order
+        $posts = Post::whereIn('id', $postIds)->get()->keyBy('id');
+
+        // Step 4: Maintain the order of posts same as postIds
+        $orderedPosts = collect($postIds)->map(function ($id) use ($posts) {
+            $post = $posts[$id] ?? null;
+            if ($post) {
+                $post->tagged = json_decode($post->tagged);
+                $post->photo = json_decode($post->photo);
+            }
+            return $post;
+        })->filter();
+
+        // Step 5: Set ordered posts into paginated object
+        $recentPaginated->setCollection($orderedPosts);
 
         return response()->json([
             'status' => true,
             'message' => 'My recent posts',
-            'data' => $recent_posts
+            'data' => $recentPaginated,
         ]);
     }
 
     public function getPost(Request $request)
     {
-        $my_posts = Post::where('user_id', Auth::id())->paginate($request->per_page??10);
+        $my_posts = Post::where('user_id', Auth::id())->latest()->paginate($request->per_page ?? 10);
 
         foreach ($my_posts as $my_post) {
             $my_post->tagged = json_decode($my_post->tagged);

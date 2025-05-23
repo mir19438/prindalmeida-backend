@@ -10,6 +10,7 @@ use App\Notifications\Me\NewPostCreated as MeNewPostCreated;
 use App\Notifications\NewPostCreated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
@@ -146,19 +147,21 @@ class PostController extends Controller
     {
         $authId = Auth::id();
 
-        // যাদের follow করা হয়েছে তাদের ID গুলো
+        // following id get
         $followings_id = Follower::where('follower_id', $authId)->pluck('user_id');
 
-        // তাদের approved পোস্টগুলো paginate করে আনবে
+        // approved post paginate get
         $followings = Post::where('post_status', 'approved')
             ->whereIn('user_id', $followings_id)
+            // ->latest() // add latest
+            ->inRandomOrder() // 🔀 ORDER BY RAND()/RANDOM() of sql
             ->paginate($request->per_page ?? 10);
 
-        // প্রতিটি পোস্টে status add করে দিচ্ছি
+        // every post status add
         $followings->getCollection()->transform(function ($post) {
             $post->tagged = json_decode($post->tagged);
             $post->photo = json_decode($post->photo);
-            $post->status = 'Following'; // এখানে status যুক্ত করছি
+            $post->status = 'Following'; //  status add (no database store)
             return $post;
         });
 
@@ -175,7 +178,6 @@ class PostController extends Controller
             'data' => $followings
         ]);
     }
-
 
     // own
     // public function discovery(Request $request)
@@ -309,52 +311,157 @@ class PostController extends Controller
     //     ]);
     // }
 
+    // public function discovery(Request $request)
+    // {
+    //     $authId = Auth::id();
+
+    //     // Auth user যাদের follow করে, তাদের user_id গুলি
+    //     $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
+
+    //     // সব user এবং তাদের সর্বশেষ approved post আনবে
+    //     $users = User::with('latestApprovedPost')->paginate($request->per_page ?? 10);
+
+    //     // শুধুমাত্র যাদের latestApprovedPost আছে
+    //     $filtered = $users->getCollection()->filter(function ($user) {
+    //         return $user->latestApprovedPost !== null;
+    //     })->values();
+
+    //     // transform: photo/tagged decode + status add
+    //     $users->setCollection(
+    //         $filtered->transform(function ($user) use ($authId, $followingIds) {
+    //             $post = $user->latestApprovedPost;
+    //             $post->tagged = json_decode($post->tagged);
+    //             $post->photo = json_decode($post->photo);
+
+    //             // status নির্ধারণ
+    //             if ($post->user_id == $authId) {
+    //                 $post->status = null;
+    //             } elseif (in_array($post->user_id, $followingIds)) {
+    //                 $post->status = 'Following';
+    //             } else {
+    //                 $post->status = 'Follow';
+    //             }
+
+    //             return $post;
+    //         })
+    //     );
+
+    //     if ($users->isEmpty()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'No discovery posts',
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Discovery',
+    //         'data' => $users,
+    //     ]);
+    // }
+
+    // public function discovery(Request $request)
+    // {
+    //     $authId = Auth::id();
+
+    //     // Auth user যাদের follow করে, তাদের user_id গুলি
+    //     $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
+
+    //     // সব user এবং তাদের সর্বশেষ approved post আনবে
+    //     $users = User::with('latestApprovedPost')->get();
+
+    //     // শুধুমাত্র যাদের latestApprovedPost আছে
+    //     $filtered = $users->filter(function ($user) {
+    //         return $user->latestApprovedPost !== null;
+    //     });
+
+    //     // প্রতিটি ইউজারের latest post কে collect করো
+    //     $posts = $filtered->map(function ($user) use ($authId, $followingIds) {
+    //         $post = $user->latestApprovedPost;
+    //         $post->tagged = json_decode($post->tagged);
+    //         $post->photo = json_decode($post->photo);
+
+    //         if ($post->user_id == $authId) {
+    //             $post->status = null;
+    //         } elseif (in_array($post->user_id, $followingIds)) {
+    //             $post->status = 'Following';
+    //         } else {
+    //             $post->status = 'Follow';
+    //         }
+
+    //         return $post;
+    //     });
+
+    //     // সর্বশেষ post খুঁজে বের করো
+    //     $latestPost = $posts->sortByDesc('created_at')->first();
+
+    //     // ওই post কে সবথেকে উপরে বসাও
+    //     $posts = $posts->reject(function ($post) use ($latestPost) {
+    //         return $post->id === $latestPost->id;
+    //     });
+
+    //     $finalPosts = collect([$latestPost])->merge($posts)->values();
+
+    //     // Pagination manually
+    //     $perPage = $request->per_page ?? 10;
+    //     $page = $request->page ?? 1;
+    //     $paged = $finalPosts->forPage($page, $perPage);
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Discovery',
+    //         'data' => [
+    //             'current_page' => (int)$page,
+    //             'per_page' => (int)$perPage,
+    //             'total' => $finalPosts->count(),
+    //             'last_page' => ceil($finalPosts->count() / $perPage),
+    //             'data' => $paged->values(),
+    //         ],
+    //     ]);
+    // }
+
+    // use getCollection()->transform() + have follow/unfollow use follower table + trending if use
     public function discovery(Request $request)
     {
         $authId = Auth::id();
+        $perPage = $request->per_page ?? 10;
 
-        // Auth user যাদের follow করে, তাদের user_id গুলি
         $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
 
-        // সব user এবং তাদের সর্বশেষ approved post আনবে
-        $users = User::with('latestApprovedPost')->paginate($request->per_page ?? 10);
-
-        // শুধুমাত্র যাদের latestApprovedPost আছে
-        $filtered = $users->getCollection()->filter(function ($user) {
-            return $user->latestApprovedPost !== null;
-        })->values();
-
-        // transform: photo/tagged decode + status add
-        $users->setCollection(
-            $filtered->transform(function ($user) use ($authId, $followingIds) {
-                $post = $user->latestApprovedPost;
-                $post->tagged = json_decode($post->tagged);
-                $post->photo = json_decode($post->photo);
-
-                // status নির্ধারণ
-                if ($post->user_id == $authId) {
-                    $post->status = null;
-                } elseif (in_array($post->user_id, $followingIds)) {
-                    $post->status = 'Following';
-                } else {
-                    $post->status = 'Follow';
+        // per user last approved post get subquery
+        $latestPosts = Post::select('posts.*')
+            ->join(
+                DB::raw('(SELECT user_id, MAX(created_at) as latest_created FROM posts WHERE post_status = "approved" GROUP BY user_id) as latest'),
+                function ($join) {
+                    $join->on('posts.user_id', '=', 'latest.user_id')
+                        ->on('posts.created_at', '=', 'latest.latest_created');
                 }
+            )
+            ->orderByDesc('posts.love_reacts') // 🔥 trending post per user
+            ->orderByDesc('posts.created_at') // fallback sort
+            // ->orderBy('posts.created_at', 'desc')
+            ->paginate($perPage);
 
-                return $post;
-            })
-        );
+        // Transform with status, decode
+        $latestPosts->getCollection()->transform(function ($post) use ($authId, $followingIds) {
+            $post->tagged = json_decode($post->tagged);
+            $post->photo = json_decode($post->photo);
 
-        if ($users->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No discovery posts',
-            ]);
-        }
+            if ($post->user_id == $authId) {
+                $post->status = null;
+            } elseif (in_array($post->user_id, $followingIds)) {
+                $post->status = 'Following';
+            } else {
+                $post->status = 'Follow';
+            }
+
+            return $post;
+        });
 
         return response()->json([
             'status' => true,
             'message' => 'Discovery',
-            'data' => $users,
+            'data' => $latestPosts,
         ]);
     }
 

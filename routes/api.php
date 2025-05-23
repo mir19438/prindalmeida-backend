@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\MyProfileController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\User\BookmarkController;
+use App\Http\Controllers\User\CommentController;
 use App\Http\Controllers\User\PostController;
 use App\Http\Controllers\User\ProfileController;
 use Illuminate\Notifications\DatabaseNotification;
@@ -34,13 +35,20 @@ Route::middleware('auth:api')->group(function () {
     // user
     Route::middleware('user')->group(function () {
 
+        // message
+        Route::post('/create-comment',[CommentController::class,'createComment']);
+        Route::get('/get-comments',[CommentController::class,'getComments']);
+        Route::post('/replay',[CommentController::class,'replay']);
+        Route::post('/like',[CommentController::class,'like']);
+        Route::get('/get-comments-with-replay-like',[CommentController::class,'getCommentWithReplayLike']);
+
         // notification
         Route::get('/get-notifications',[NotificationController::class,'getNotifications']);
         Route::get('/read',[NotificationController::class,'read']);
         Route::get('/read-all',[NotificationController::class,'readAll']);
 
         // bookmark
-        Route::post('/toggle-bookmark', [BookmarkController::class, 'toggleBookmark']);
+        Route::get('/toggle-bookmark', [BookmarkController::class, 'toggleBookmark']);
         Route::get('/get-bookmarks', [BookmarkController::class, 'getBookmarks']);
         Route::get('/view-post', [BookmarkController::class, 'viewPost']);
 
@@ -57,7 +65,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/update-user-profile', [ProfileController::class, 'updateUserProfile']);
         Route::get('/get-following', [ProfileController::class, 'getFollowing']);
         Route::get('/get-follower', [ProfileController::class, 'getFollower']);
-        Route::post('/recent-post', [ProfileController::class, 'recentPost']);
+        Route::get('/recent-post', [ProfileController::class, 'recentPost']);
         Route::get('/get-recent-post', [ProfileController::class, 'getRecentPost']);
         Route::get('/get-post', [ProfileController::class, 'getPost']);
     });
