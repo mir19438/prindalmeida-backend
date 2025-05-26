@@ -13,19 +13,19 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name',255);
-            $table->string('user_name',255);
-            $table->string('email',255)->unique();
-            $table->string('password',255);
-            $table->enum('role',['ADMIN','USER'])->default('USER');
+            $table->string('name', 255);
+            $table->string('user_name', 255);
+            $table->string('email', 255)->unique();
+            $table->string('password', 255);
+            $table->enum('role', ['ADMIN', 'USER'])->default('USER');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('otp_verified_at')->nullable();
             $table->string('otp')->nullable();
             $table->timestamp('otp_expires_at')->nullable();
             $table->longText('bio')->nullable();
             $table->string('avatar')->default('default/avatar.jpg');
-            $table->enum('verified_status',['verified','unverified'])->default('unverified');
-            $table->enum('profile_status',['admin','unbanned','banned'])->default('unbanned');
+            $table->enum('verified_status', ['verified', 'unverified'])->default('unverified');
+            $table->enum('profile_status', ['admin', 'unbanned', 'banned'])->default('unbanned');
             $table->string('contact_number')->nullable();
             $table->string('location')->nullable();
             $table->rememberToken();

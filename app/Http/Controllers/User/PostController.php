@@ -20,21 +20,36 @@ class PostController extends Controller
         // validation roles
         $validator = Validator::make($request->all(), [
             'meal_name'       => 'required|string',
-            'have_it'         => 'required|string',
+            'have_it'         => 'required|string|in:1,2', // নিশ্চিতভাবে 1 বা 2 হতে হবে
+            'restaurant_name' => 'nullable|string',
             'food_type'       => 'required|string',
-            'location'        => 'required|string',
+            'location'        => 'nullable|string',
             'description'     => 'required|string',
-            'rating'          => 'required|string',
+            'rating'          => 'nullable|string',
             'tagged'          => 'sometimes|array',
-            'images' => 'required|array|max:3', // max 3 image
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images'          => 'required|array|max:3', // max 3 image
+            'images.*'        => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        // check validation
+        // Custom conditional validation after base validation
+        $validator->after(function ($validator) use ($request) {
+            if ($request->have_it == 1) {
+                if (!$request->restaurant_name) {
+                    $validator->errors()->add('restaurant_name', 'The restaurant name field is required when have_it is 1.');
+                }
+                if (!$request->location) {
+                    $validator->errors()->add('location', 'The location field is required when have_it is 1.');
+                }
+                if (!$request->rating) {
+                    $validator->errors()->add('rating', 'The rating field is required when have_it is 1.');
+                }
+            }
+        });
+
         if ($validator->fails()) {
             return response()->json([
-                'status'    => false,
-                'message'   => $validator->errors()
+                'status' => false,
+                'errors' => $validator->errors()
             ], 422);
         }
 
@@ -63,11 +78,12 @@ class PostController extends Controller
             'user_id'     => Auth::id(),
             'user_name'   => Auth::user()->name,
             'meal_name'   => $request->meal_name,
-            'have_it'     => $request->have_it,
+            'have_it'     => $request->have_it == 1 ? 'Restaurant' : 'Home-made',
+            'restaurant_name'   => $request->restaurant_name ?? null,
             'food_type'   => $request->food_type,
-            'location'    => $request->location,
+            'location'    => $request->location ?? null,
             'description' => $request->description,
-            'rating'      => $request->rating,
+            'rating'      => $request->rating ?? null,
             'tagged'      => json_encode($request->tagged),
             'tagged_count' => $request->tagged ? count($request->tagged) - 1 : 0,
             'photo'       => json_encode($paths) ?? null
@@ -75,13 +91,12 @@ class PostController extends Controller
 
         // 🔔 Notify all users
         $users = User::where('id', '!=', Auth::id())->get(); // excluding the creator
-
+        // Notify me
         Auth::user()->notify(new MeNewPostCreated($post));
-
+        // Notify all without me
         foreach ($users as $user) {
             $user->notify(new NewPostCreated($post));
         }
-
 
         return response()->json([
             'status' => true,
@@ -168,7 +183,7 @@ class PostController extends Controller
         if ($followings->isEmpty()) {
             return response()->json([
                 'status' => false,
-                'message' => 'No following posts',
+                'message' => 'No following posts here',
             ]);
         }
 
@@ -441,6 +456,14 @@ class PostController extends Controller
             ->orderByDesc('posts.created_at') // fallback sort
             // ->orderBy('posts.created_at', 'desc')
             ->paginate($perPage);
+
+        // ✅ Check if no post found
+        if ($latestPosts->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No discovery posts here',
+            ]);
+        }
 
         // Transform with status, decode
         $latestPosts->getCollection()->transform(function ($post) use ($authId, $followingIds) {

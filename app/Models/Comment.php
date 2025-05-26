@@ -16,6 +16,11 @@ class Comment extends Model
      */
     protected $guarded = ['id'];
 
+    // Comment.php
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     // কোন পোস্টের কমেন্ট
     public function post()

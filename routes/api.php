@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\MyProfileController;
+use App\Http\Controllers\Admin\PostManageController;
+use App\Http\Controllers\Admin\UserManageController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\User\BookmarkController;
 use App\Http\Controllers\User\CommentController;
+use App\Http\Controllers\User\HeartController;
 use App\Http\Controllers\User\PostController;
 use App\Http\Controllers\User\ProfileController;
 use Illuminate\Notifications\DatabaseNotification;
@@ -21,12 +24,22 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // private route for user
 Route::middleware('auth:api')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/update-password', [AuthController::class, 'updatePassword']);
 
     // admin
     Route::middleware('admin')->group(function () {
+
+        // manage posts
+        Route::get('/get-posts',[PostManageController::class,'getPosts']);
+        Route::delete('/delete-post',[PostManageController::class,'deletePost']);
+
+        // manage users
+        Route::get('/get-users',[UserManageController::class,'getUsers']);
+        Route::delete('/delete-user',[UserManageController::class,'deleteUser']);
+
         // profile
         Route::post('/update-admin-profile', [MyProfileController::class, 'updateAdminProfile']);
     });
@@ -35,11 +48,14 @@ Route::middleware('auth:api')->group(function () {
     // user
     Route::middleware('user')->group(function () {
 
+        // heart
+        Route::get('/toggle-heart', [HeartController::class, 'toggleHeart']);
+
         // message
         Route::post('/create-comment',[CommentController::class,'createComment']);
         Route::get('/get-comments',[CommentController::class,'getComments']);
         Route::post('/replay',[CommentController::class,'replay']);
-        Route::post('/like',[CommentController::class,'like']);
+        Route::get('/like',[CommentController::class,'like']);
         Route::get('/get-comments-with-replay-like',[CommentController::class,'getCommentWithReplayLike']);
 
         // notification

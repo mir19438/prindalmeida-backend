@@ -13,6 +13,8 @@ class BookmarkController extends Controller
     public function toggleBookmark(Request $request)
     {
         $postId = $request->post_id;
+        $type = $request->type;
+
         $targetId = Auth::id();
 
         $post = Post::where('id', $postId)->first();
@@ -44,6 +46,7 @@ class BookmarkController extends Controller
             Bookmark::create([
                 'user_id' => $targetId,
                 'post_id' => $postId,
+                'type' => $type
             ]);
             return response()->json([
                 'status' => true,
@@ -54,7 +57,9 @@ class BookmarkController extends Controller
 
     public function getBookmarks(Request $request)
     {
-        $bookmarks_id = Bookmark::where('user_id', Auth::id())->pluck('post_id');
+        $bookmarks_id = Bookmark::where('user_id', $request->user_id ?? Auth::id())
+            ->where('type', $request->type)
+            ->pluck('post_id');
 
         $posts = Post::whereIn('id', $bookmarks_id)
             ->latest()

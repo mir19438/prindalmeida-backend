@@ -144,39 +144,36 @@ class CommentController extends Controller
     //     }
     // }
 
-    use App\Models\Comment;
-    use App\Models\CommentLike;
-
     public function like(Request $request)
     {
         $commentId = $request->comment_id;
-        $userId = auth()->id(); // অথবা $request->user_id;
+        $targetId = Auth::id();
 
-        $comment = Comment::find($commentId);
+        $comment = Comment::where('id', $commentId)->first();
         if (!$comment) {
             return response()->json([
                 'status' => false,
-                'message' => 'Comment not found'
+                'message' => 'comment not found'
             ]);
         }
 
-        $like = CommentLike::where('comment_id', $commentId)
-            ->where('user_id', $userId)
+        $exists = Like::where('comment_id', $commentId)
+            ->where('user_id', $targetId)
             ->first();
 
-        if ($like) {
-            // $like->delete();
-            $comment->decrement('like_count'); // যদি এই কলাম থাকে
+        if ($exists) {
+            $comment->decrement('like');
+            $exists->delete();
             return response()->json([
                 'status' => true,
                 'message' => 'Like removed'
             ]);
         } else {
-            CommentLike::create([
+            $comment->increment('like');
+            Like::create([
+                'user_id' => $targetId,
                 'comment_id' => $commentId,
-                'user_id' => $userId
             ]);
-            $comment->increment('like_count'); // যদি এই কলাম থাকে
             return response()->json([
                 'status' => true,
                 'message' => 'Like saved'
@@ -184,16 +181,74 @@ class CommentController extends Controller
         }
     }
 
+    // public function getCommentWithReplayLike(Request $request)
+    // {
+
+    //     $post = Post::with(['comments.user', 'comments.replies'])->where('id',$request->post_id)->get();
+
+    //     $post->tagged = json_decode($post->tagged);
+    //         $post->photo = json_decode($post->photo);
+
+    //     $post->transform(function ($post) {
+    //         $post->comments->transform(function ($comment) {
+    //             return [
+    //                 'id' => $comment->id,
+    //                 'post_id' => $comment->post_id,
+    //                 'user_id' => $comment->user_id,
+    //                 'user_name' => $comment->user->name ?? null,
+    //                 'avatar' => $comment->user->avatar ?? null,
+    //                 'comment' => $comment->comment,
+    //                 'like' => $comment->like,
+    //                 'created_at' => $comment->created_at,
+    //                 'updated_at' => $comment->updated_at,
+    //                 'replies' => $comment->replies,
+    //             ];
+    //         });
+
+    //         return $post;
+    //     });
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'get comment by post with replay and like',
+    //         'data' => $post
+    //     ]);
+    // }
 
     public function getCommentWithReplayLike(Request $request)
     {
+        $posts = Post::with(['comments.user', 'comments.replies'])
+            ->where('id', $request->post_id)
+            ->get();
 
-        $post = Post::with(['comments.replies'])->get();
+        $posts->transform(function ($post) {
+            // JSON decode
+            $post->tagged = json_decode($post->tagged);
+            $post->photo = json_decode($post->photo);
+
+            // Transform comments
+            $post->comments->transform(function ($comment) {
+                return [
+                    'id' => $comment->id,
+                    'post_id' => $comment->post_id,
+                    'user_id' => $comment->user_id,
+                    'user_name' => $comment->user->name ?? null,
+                    'avatar' => $comment->user->avatar ?? null,
+                    'comment' => $comment->comment,
+                    'like' => $comment->like,
+                    'created_at' => $comment->created_at,
+                    'updated_at' => $comment->updated_at,
+                    'replies' => $comment->replies, // If needed, you can transform replies too
+                ];
+            });
+
+            return $post;
+        });
 
         return response()->json([
             'status' => true,
             'message' => 'get comment by post with replay and like',
-            'data' => $post
+            'data' => $posts
         ]);
     }
 }
