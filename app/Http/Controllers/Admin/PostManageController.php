@@ -50,7 +50,7 @@ class PostManageController extends Controller
     {
         // Validate that user_id is provided
         $validator = Validator::make($request->all(), [
-            'post_id' => 'required|integer|gt:0|exists:users,id',
+            'post_id' => 'required|integer|gt:0|exists:posts,id',
         ]);
 
 

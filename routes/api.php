@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\MyProfileController;
 use App\Http\Controllers\Admin\PostManageController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserManageController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\NotificationController;
@@ -32,13 +33,26 @@ Route::middleware('auth:api')->group(function () {
     // admin
     Route::middleware('admin')->group(function () {
 
+        // settings
+        // Route::post('/terms-conditions', [SettingsController::class, 'termsConditions']);
+        // Route::get('/get-terms-conditions', [SettingsController::class, 'getTermsConditions']);
+        // Route::post('/privacy-policy', [SettingsController::class, 'privacyPolicy']);
+        // Route::get('/get-privacy-policy', [SettingsController::class, 'getPrivacyPolicy']);
+        // Route::post('/our-mission', [SettingsController::class, 'ourMission']);
+        // Route::get('/get-our-mission', [SettingsController::class, 'getOurMission']);
+        // Route::get('/get-settings', [SettingsController::class, 'getSettings']);
+
+        Route::get('/get-settings', [SettingsController::class, 'getSettings']);
+        Route::post('/update-settings', [SettingsController::class, 'updateSettings']);
+
+
         // manage posts
-        Route::get('/get-posts',[PostManageController::class,'getPosts']);
-        Route::delete('/delete-post',[PostManageController::class,'deletePost']);
+        Route::get('/get-posts', [PostManageController::class, 'getPosts']);
+        Route::delete('/delete-post', [PostManageController::class, 'deletePost']);
 
         // manage users
-        Route::get('/get-users',[UserManageController::class,'getUsers']);
-        Route::delete('/delete-user',[UserManageController::class,'deleteUser']);
+        Route::get('/get-users', [UserManageController::class, 'getUsers']);
+        Route::delete('/delete-user', [UserManageController::class, 'deleteUser']);
 
         // profile
         Route::post('/update-admin-profile', [MyProfileController::class, 'updateAdminProfile']);
@@ -52,16 +66,16 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/toggle-heart', [HeartController::class, 'toggleHeart']);
 
         // message
-        Route::post('/create-comment',[CommentController::class,'createComment']);
-        Route::get('/get-comments',[CommentController::class,'getComments']);
-        Route::post('/replay',[CommentController::class,'replay']);
-        Route::get('/like',[CommentController::class,'like']);
-        Route::get('/get-comments-with-replay-like',[CommentController::class,'getCommentWithReplayLike']);
+        Route::post('/create-comment', [CommentController::class, 'createComment']);
+        Route::get('/get-comments', [CommentController::class, 'getComments']);
+        Route::post('/replay', [CommentController::class, 'replay']);
+        Route::get('/like', [CommentController::class, 'like']);
+        Route::get('/get-comments-with-replay-like', [CommentController::class, 'getCommentWithReplayLike']);
 
         // notification
-        Route::get('/get-notifications',[NotificationController::class,'getNotifications']);
-        Route::get('/read',[NotificationController::class,'read']);
-        Route::get('/read-all',[NotificationController::class,'readAll']);
+        Route::get('/get-notifications', [NotificationController::class, 'getNotifications']);
+        Route::get('/read', [NotificationController::class, 'read']);
+        Route::get('/read-all', [NotificationController::class, 'readAll']);
 
         // bookmark
         Route::get('/toggle-bookmark', [BookmarkController::class, 'toggleBookmark']);
