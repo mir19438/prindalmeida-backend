@@ -3,18 +3,19 @@
 use App\Http\Controllers\Admin\MyProfileController;
 use App\Http\Controllers\Admin\PostManageController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\UserAnalyticsController;
 use App\Http\Controllers\Admin\UserManageController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SendSms;
 use App\Http\Controllers\User\BookmarkController;
 use App\Http\Controllers\User\CommentController;
 use App\Http\Controllers\User\HeartController;
 use App\Http\Controllers\User\PostController;
 use App\Http\Controllers\User\ProfileController;
-use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
+
+Route::get('send-sms',[SendSms::class,'sendSms']);
 
 // public route for user
 Route::post('/register', [AuthController::class, 'register']);
@@ -32,16 +33,7 @@ Route::middleware('auth:api')->group(function () {
 
     // admin
     Route::middleware('admin')->group(function () {
-
-        // settings
-        // Route::post('/terms-conditions', [SettingsController::class, 'termsConditions']);
-        // Route::get('/get-terms-conditions', [SettingsController::class, 'getTermsConditions']);
-        // Route::post('/privacy-policy', [SettingsController::class, 'privacyPolicy']);
-        // Route::get('/get-privacy-policy', [SettingsController::class, 'getPrivacyPolicy']);
-        // Route::post('/our-mission', [SettingsController::class, 'ourMission']);
-        // Route::get('/get-our-mission', [SettingsController::class, 'getOurMission']);
-        // Route::get('/get-settings', [SettingsController::class, 'getSettings']);
-
+        Route::get('/user-analytics', [UserAnalyticsController::class, 'userAnalytics']);
         Route::get('/get-settings', [SettingsController::class, 'getSettings']);
         Route::post('/update-settings', [SettingsController::class, 'updateSettings']);
 
@@ -97,6 +89,6 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/get-follower', [ProfileController::class, 'getFollower']);
         Route::get('/recent-post', [ProfileController::class, 'recentPost']);
         Route::get('/get-recent-post', [ProfileController::class, 'getRecentPost']);
-        Route::get('/get-post', [ProfileController::class, 'getPost']);
+        Route::get('/get-my-posts', [ProfileController::class, 'getMyPosts']);
     });
 });

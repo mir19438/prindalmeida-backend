@@ -226,6 +226,9 @@ class CommentController extends Controller
             $post->tagged = json_decode($post->tagged);
             $post->photo = json_decode($post->photo);
 
+            // Total comment count (without replies)
+            $post->comment_count = $post->comments->count();
+
             // Transform comments
             $post->comments->transform(function ($comment) {
                 return [

@@ -120,6 +120,10 @@ class AuthController extends Controller
         // check otp
         if ($user->otp_expires_at > Carbon::now()) {
 
+            // active
+            $user->last_login_at = Carbon::now();
+            $user->user_status   = 'active';
+
             // user status update
             $user->otp                = null;
             $user->otp_expires_at     = null;
@@ -270,6 +274,10 @@ class AuthController extends Controller
         // Generate JWT Token
         // $token = JWTAuth::fromUser($user);
 
+        $user->last_login_at = Carbon::now();
+        $user->user_status   = 'active';
+        $user->save();
+
         // Return Success Response
         return response()->json([
             'status' => true,
@@ -286,6 +294,11 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
+            // $user = User::where('id', Auth::id())->first();
+            // $user->last_login_at = null;
+            // $user->user_status   = 'inactive';
+            // $user->save();
+
             JWTAuth::invalidate(JWTAuth::getToken());
             return response()->json([
                 'status' => true,

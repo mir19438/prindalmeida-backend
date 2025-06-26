@@ -8,105 +8,105 @@ use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
-    // POST: Save or Update
-    public function termsConditions(Request $request)
-    {
+    // // POST: Save or Update
+    // public function termsConditions(Request $request)
+    // {
 
-        $request->validate([
-            'content' => 'required|string',
-        ]);
+    //     $request->validate([
+    //         'content' => 'required|string',
+    //     ]);
 
-        $term = Setting::first();
+    //     $term = Setting::first();
 
-        if ($term) {
-            $term->update(['terms_&_conditions' => $request->content]);
-        } else {
-            $term = Setting::create(['terms_&_conditions' => $request->content]);
-        }
+    //     if ($term) {
+    //         $term->update(['terms_&_conditions' => $request->content]);
+    //     } else {
+    //         $term = Setting::create(['terms_&_conditions' => $request->content]);
+    //     }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Terms & Conditions saved successfully',
-            'data' => $term,
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Terms & Conditions saved successfully',
+    //         'data' => $term,
+    //     ]);
+    // }
 
-    // GET: Fetch
-    public function getTermsConditions()
-    {
-        $term = Setting::first();
+    // // GET: Fetch
+    // public function getTermsConditions()
+    // {
+    //     $term = Setting::first();
 
-        return response()->json([
-            'status' => true,
-            'data' => $term,
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'data' => $term,
+    //     ]);
+    // }
 
-    // POST: Save or Update
-    public function privacyPolicy(Request $request)
-    {
-        $request->validate([
-            'content' => 'required|string',
-        ]);
+    // // POST: Save or Update
+    // public function privacyPolicy(Request $request)
+    // {
+    //     $request->validate([
+    //         'content' => 'required|string',
+    //     ]);
 
-        $term = Setting::first();
+    //     $term = Setting::first();
 
-        if ($term) {
-            $term->update(['privacy_policy' => $request->content]);
-        } else {
-            $term = Setting::create(['privacy_policy' => $request->content]);
-        }
+    //     if ($term) {
+    //         $term->update(['privacy_policy' => $request->content]);
+    //     } else {
+    //         $term = Setting::create(['privacy_policy' => $request->content]);
+    //     }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Privacy Policy saved successfully',
-            'data' => $term,
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Privacy Policy saved successfully',
+    //         'data' => $term,
+    //     ]);
+    // }
 
-    // GET: Fetch
-    public function getPrivacyPolicy()
-    {
-        $term = Setting::first();
+    // // GET: Fetch
+    // public function getPrivacyPolicy()
+    // {
+    //     $term = Setting::first();
 
-        return response()->json([
-            'status' => true,
-            'data' => $term,
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'data' => $term,
+    //     ]);
+    // }
 
-    // POST: Save or Update
-    public function ourMission(Request $request)
-    {
-        $request->validate([
-            'content' => 'required|string',
-        ]);
+    // // POST: Save or Update
+    // public function ourMission(Request $request)
+    // {
+    //     $request->validate([
+    //         'content' => 'required|string',
+    //     ]);
 
-        $term = Setting::first();
+    //     $term = Setting::first();
 
-        if ($term) {
-            $term->update(['our_mission' => $request->content]);
-        } else {
-            $term = Setting::create(['our_mission' => $request->content]);
-        }
+    //     if ($term) {
+    //         $term->update(['our_mission' => $request->content]);
+    //     } else {
+    //         $term = Setting::create(['our_mission' => $request->content]);
+    //     }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Our Mission saved successfully',
-            'data' => $term,
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Our Mission saved successfully',
+    //         'data' => $term,
+    //     ]);
+    // }
 
-    // GET: Fetch
-    public function getOurMission()
-    {
-        $term = Setting::first();
+    // // GET: Fetch
+    // public function getOurMission()
+    // {
+    //     $term = Setting::first();
 
-        return response()->json([
-            'status' => true,
-            'data' => $term,
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'data' => $term,
+    //     ]);
+    // }
 
     // // GET: Fetch
     // public function getSettings()

@@ -73,7 +73,6 @@ class PostController extends Controller
             $paths[] = '/storage/' . $image->store('posts', 'public');
         }
 
-
         $post = Post::create([
             'user_id'     => Auth::id(),
             'user_name'   => Auth::user()->name,
@@ -168,8 +167,8 @@ class PostController extends Controller
         // approved post paginate get
         $followings = Post::where('post_status', 'approved')
             ->whereIn('user_id', $followings_id)
-            // ->latest() // add latest
-            ->inRandomOrder() // 🔀 ORDER BY RAND()/RANDOM() of sql
+            ->latest() // add latest
+            // ->inRandomOrder() // 🔀 ORDER BY RAND()/RANDOM() of sql
             ->paginate($request->per_page ?? 10);
 
         // every post status add
@@ -436,28 +435,204 @@ class PostController extends Controller
     // }
 
     // use getCollection()->transform() + have follow/unfollow use follower table + trending if use
+    // public function discovery(Request $request)
+    // {
+    //     $authId = Auth::id();
+    //     $perPage = $request->per_page ?? 10;
+
+    //     $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
+
+    //     // per user last approved post get subquery
+    //     $latestPosts = Post::select('posts.*')
+    //         ->join(
+    //             DB::raw('(SELECT user_id, MAX(created_at) as latest_created FROM posts WHERE post_status = "approved" GROUP BY user_id) as latest'),
+    //             function ($join) {
+    //                 $join->on('posts.user_id', '=', 'latest.user_id')
+    //                     ->on('posts.created_at', '=', 'latest.latest_created');
+    //             }
+    //         )
+    //         ->orderByDesc('posts.love_reacts') // 🔥 trending post per user
+    //         ->orderByDesc('posts.created_at') // fallback sort
+    //         // ->orderBy('posts.created_at', 'desc')
+    //         ->paginate($perPage);
+
+    //     // ✅ Check if no post found
+    //     if ($latestPosts->isEmpty()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'No discovery posts here',
+    //         ]);
+    //     }
+
+    //     // Transform with status, decode
+    //     $latestPosts->getCollection()->transform(function ($post) use ($authId, $followingIds) {
+    //         $post->tagged = json_decode($post->tagged);
+    //         $post->photo = json_decode($post->photo);
+
+    //         if ($post->user_id == $authId) {
+    //             $post->status = null;
+    //         } elseif (in_array($post->user_id, $followingIds)) {
+    //             $post->status = 'Following';
+    //         } else {
+    //             $post->status = 'Follow';
+    //         }
+
+    //         return $post;
+    //     });
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Discovery',
+    //         'data' => $latestPosts,
+    //     ]);
+    // }
+
+    // public function discovery(Request $request)
+    // {
+    //     $authId = Auth::id();
+    //     $perPage = $request->per_page ?? 10;
+
+    //     $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
+
+    //     // Subquery to get each user's most loved approved post
+    //     $latestPosts = Post::select('posts.*')
+    //         ->join(
+    //             DB::raw('(
+    //             SELECT user_id, MAX(love_reacts) as max_love
+    //             FROM posts
+    //             WHERE post_status = "approved"
+    //             GROUP BY user_id
+    //         ) as loved'),
+    //             function ($join) {
+    //                 $join->on('posts.user_id', '=', 'loved.user_id')
+    //                     ->on('posts.love_reacts', '=', 'loved.max_love');
+    //             }
+    //         )
+    //         ->where('post_status', 'approved')
+    //         ->orderByDesc('posts.love_reacts') // Sort by most loved
+    //         ->paginate($perPage);
+
+    //     if ($latestPosts->isEmpty()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'No discovery posts here',
+    //         ]);
+    //     }
+
+    //     // Transform post data
+    //     $latestPosts->getCollection()->transform(function ($post) use ($authId, $followingIds) {
+    //         $post->tagged = json_decode($post->tagged);
+    //         $post->photo = json_decode($post->photo);
+
+    //         if ($post->user_id == $authId) {
+    //             $post->status = null;
+    //         } elseif (in_array($post->user_id, $followingIds)) {
+    //             $post->status = 'Following';
+    //         } else {
+    //             $post->status = 'Follow';
+    //         }
+
+    //         return $post;
+    //     });
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Discovery',
+    //         'data' => $latestPosts,
+    //     ]);
+    // }
+
+    // public function discovery(Request $request)
+    // {
+    //     $authId = Auth::id();
+    //     $perPage = $request->per_page ?? 10;
+
+    //     $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
+
+    //     // MySQL 8+ required for ROW_NUMBER()
+    //     $latestPosts = Post::select('posts.*')
+    //         ->join(DB::raw('(
+    //         SELECT *
+    //         FROM (
+    //             SELECT *,
+    //                 ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY love_reacts DESC, created_at DESC) as rn
+    //             FROM posts
+    //             WHERE post_status = "approved"
+    //         ) as ranked
+    //         WHERE ranked.rn = 1
+    //     ) as latest'), function ($join) {
+    //             $join->on('posts.id', '=', 'latest.id');
+    //         })
+    //         ->orderByDesc('posts.love_reacts')
+    //         ->orderByDesc('posts.created_at')
+    //         ->paginate($perPage);
+
+    //     if ($latestPosts->isEmpty()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'No discovery posts here',
+    //         ]);
+    //     }
+
+    //     $latestPosts->getCollection()->transform(function ($post) use ($authId, $followingIds) {
+    //         $post->tagged = json_decode($post->tagged);
+    //         $post->photo = json_decode($post->photo);
+
+    //         if ($post->user_id == $authId) {
+    //             $post->status = null;
+    //         } elseif (in_array($post->user_id, $followingIds)) {
+    //             $post->status = 'Following';
+    //         } else {
+    //             $post->status = 'Follow';
+    //         }
+
+    //         return $post;
+    //     });
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Discovery',
+    //         'data' => $latestPosts,
+    //     ]);
+    // }
+
     public function discovery(Request $request)
     {
         $authId = Auth::id();
         $perPage = $request->per_page ?? 10;
 
-        $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
+        // // Subquery: ১ জন ইউজারের ক্ষেত্রে নিজের love_reacts বেশি অথবা latest post
+        // // অন্যদের জন্য latest approved post
+        // $latestPosts = Post::select('posts.*')
+        //     ->join(DB::raw('(
+        //     SELECT *
+        //     FROM (
+        //         SELECT *,
+        //             ROW_NUMBER() OVER (
+        //                 PARTITION BY user_id
+        //                 ORDER BY
+        //                     CASE
+        //                         WHEN user_id = ' . $authId . ' AND love_reacts > 0 THEN 1
+        //                         WHEN user_id = ' . $authId . ' THEN 2
+        //                         ELSE 3
+        //                     END,
+        //                     love_reacts DESC,
+        //                     created_at DESC
+        //             ) as rn
+        //         FROM posts
+        //         WHERE post_status = "approved"
+        //     ) as ranked
+        //     WHERE ranked.rn = 1
+        // ) as latest'), function ($join) {
+        //         $join->on('posts.id', '=', 'latest.id');
+        //     })
+        //     ->orderByDesc('posts.created_at')
+        //     ->paginate($perPage);
 
-        // per user last approved post get subquery
-        $latestPosts = Post::select('posts.*')
-            ->join(
-                DB::raw('(SELECT user_id, MAX(created_at) as latest_created FROM posts WHERE post_status = "approved" GROUP BY user_id) as latest'),
-                function ($join) {
-                    $join->on('posts.user_id', '=', 'latest.user_id')
-                        ->on('posts.created_at', '=', 'latest.latest_created');
-                }
-            )
-            ->orderByDesc('posts.love_reacts') // 🔥 trending post per user
-            ->orderByDesc('posts.created_at') // fallback sort
-            // ->orderBy('posts.created_at', 'desc')
+        $latestPosts = Post::orderByDesc('love_reacts')
+            ->orderByDesc('created_at') // fallback, যদি love_reacts সমান হয়
             ->paginate($perPage);
 
-        // ✅ Check if no post found
         if ($latestPosts->isEmpty()) {
             return response()->json([
                 'status' => false,
@@ -465,7 +640,9 @@ class PostController extends Controller
             ]);
         }
 
-        // Transform with status, decode
+        $followingIds = Follower::where('follower_id', $authId)->pluck('user_id')->toArray();
+
+        // Transform
         $latestPosts->getCollection()->transform(function ($post) use ($authId, $followingIds) {
             $post->tagged = json_decode($post->tagged);
             $post->photo = json_decode($post->photo);

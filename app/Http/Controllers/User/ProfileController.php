@@ -121,35 +121,35 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function recentPost(Request $request)
-    {
-        $user = User::find(Auth::id());
+    // public function recentPost(Request $request)
+    // {
+    //     $user = User::find(Auth::id());
 
-        // User Not Found
-        if (!$user) {
-            return response()->json([
-                'ok' => false,
-                'message' => 'User not found',
-            ], 404);
-        }
+    //     // User Not Found
+    //     if (!$user) {
+    //         return response()->json([
+    //             'ok' => false,
+    //             'message' => 'User not found',
+    //         ], 404);
+    //     }
 
-        $checkUser = RecentPost::where('post_id', $request->post_id)->first();
+    //     $checkUser = RecentPost::where('post_id', $request->post_id)->first();
 
-        if (!$checkUser) {
-            $recent_post = new RecentPost();
-            $recent_post->user_id = $user->id;
-            $recent_post->post_id = $request->post_id;
-            $recent_post->save();
-        } else {
-            $checkUser->created_at = Carbon::now();
-            $checkUser->save();
-        }
+    //     if (!$checkUser) {
+    //         $recent_post = new RecentPost();
+    //         $recent_post->user_id = $user->id;
+    //         $recent_post->post_id = $request->post_id;
+    //         $recent_post->save();
+    //     } else {
+    //         $checkUser->created_at = Carbon::now();
+    //         $checkUser->save();
+    //     }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Recent post recorded'
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Recent post recorded'
+    //     ]);
+    // }
 
     // public function getRecentPost(Request $request)
     // {
@@ -174,40 +174,40 @@ class ProfileController extends Controller
     //     ]);
     // }
 
-    public function getRecentPost(Request $request)
-    {
-        $perPage = $request->per_page ?? 10;
+    // public function getRecentPost(Request $request)
+    // {
+    //     $perPage = $request->per_page ?? 10;
 
-        // Step 1: Get paginated recent posts
-        $recentPaginated = RecentPost::orderBy('created_at', 'desc')->paginate($perPage);
+    //     // Step 1: Get paginated recent posts
+    //     $recentPaginated = RecentPost::orderBy('created_at', 'desc')->paginate($perPage);
 
-        // Step 2: Collect post IDs in order
-        $postIds = $recentPaginated->pluck('post_id')->toArray();
+    //     // Step 2: Collect post IDs in order
+    //     $postIds = $recentPaginated->pluck('post_id')->toArray();
 
-        // Step 3: Fetch posts maintaining the same order
-        $posts = Post::whereIn('id', $postIds)->get()->keyBy('id');
+    //     // Step 3: Fetch posts maintaining the same order
+    //     $posts = Post::whereIn('id', $postIds)->get()->keyBy('id');
 
-        // Step 4: Maintain the order of posts same as postIds
-        $orderedPosts = collect($postIds)->map(function ($id) use ($posts) {
-            $post = $posts[$id] ?? null;
-            if ($post) {
-                $post->tagged = json_decode($post->tagged);
-                $post->photo = json_decode($post->photo);
-            }
-            return $post;
-        })->filter();
+    //     // Step 4: Maintain the order of posts same as postIds
+    //     $orderedPosts = collect($postIds)->map(function ($id) use ($posts) {
+    //         $post = $posts[$id] ?? null;
+    //         if ($post) {
+    //             $post->tagged = json_decode($post->tagged);
+    //             $post->photo = json_decode($post->photo);
+    //         }
+    //         return $post;
+    //     })->filter();
 
-        // Step 5: Set ordered posts into paginated object
-        $recentPaginated->setCollection($orderedPosts);
+    //     // Step 5: Set ordered posts into paginated object
+    //     $recentPaginated->setCollection($orderedPosts);
 
-        return response()->json([
-            'status' => true,
-            'message' => 'My recent posts',
-            'data' => $recentPaginated,
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'My recent posts',
+    //         'data' => $recentPaginated,
+    //     ]);
+    // }
 
-    public function getPost(Request $request)
+    public function getMyPosts(Request $request)
     {
         $my_posts = Post::where('user_id', Auth::id())->latest()->paginate($request->per_page ?? 10);
 

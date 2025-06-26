@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('user_name', 255);
             $table->string('email', 255)->unique();
             $table->string('password', 255);
+            $table->enum('user_status', ['active', 'inactive'])->default('inactive');
+            $table->timestamp('last_login_at')->nullable();
             $table->enum('role', ['ADMIN', 'USER'])->default('USER');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('otp_verified_at')->nullable();
