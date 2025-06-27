@@ -351,12 +351,13 @@ class AuthController extends Controller
             $user->otp_expires_at  = $otp_expires_at;
             $user->verified_status          = 'unverified';
             $user->save();
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'User not verified',
-            ], 404);
         }
+        // } else {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'User not verified',
+        //     ], 404);
+        // }
 
         $data = [
             'userName' => explode('@', $request->email)[0],

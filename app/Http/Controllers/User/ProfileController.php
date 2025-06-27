@@ -71,7 +71,7 @@ class ProfileController extends Controller
 
     public function getFollowing(Request $request)
     {
-        $followings_id = Follower::where('follower_id', Auth::id())->get()->pluck('user_id');
+        $followings_id = Follower::where('follower_id', $request->user_id ?? Auth::id())->get()->pluck('user_id');
 
         $followings = User::select('id', 'name', 'avatar')->whereIn('id', $followings_id);
 
@@ -89,15 +89,15 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Who I am following',
+            'message' => $request->user_id ? 'User who following' : 'Who I am following',
             'following_count' => count($followings),
-            'data' => $followings
+            'data' => !$request->user_id ? $followings : null
         ]);
     }
 
     public function getFollower(Request $request)
     {
-        $followers_id = Follower::where('user_id', Auth::id())->pluck('follower_id');
+        $followers_id = Follower::where('user_id', $request->user_id ?? Auth::id())->pluck('follower_id');
         $followings_id = Follower::where('follower_id', Auth::id())->pluck('user_id');
 
         // followers list
@@ -115,9 +115,9 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'My followers',
+            'message' => $request->user_id ? 'User followers' : 'My followers',
             'follower_count' => count($followers),
-            'data' => $followers
+            'data' => !$request->user_id ? $followers : null
         ]);
     }
 
@@ -209,7 +209,7 @@ class ProfileController extends Controller
 
     public function getMyPosts(Request $request)
     {
-        $my_posts = Post::where('user_id', Auth::id())->latest()->paginate($request->per_page ?? 10);
+        $my_posts = Post::where('user_id', $request->user_id ?? Auth::id())->latest()->paginate($request->per_page ?? 10);
 
         foreach ($my_posts as $my_post) {
             $my_post->tagged = json_decode($my_post->tagged);
@@ -218,7 +218,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'My posts',
+            'message' => $request->user_id ? 'User posts' : 'My posts',
             'data' => $my_posts
         ]);
     }
