@@ -14,6 +14,7 @@ class BookmarkController extends Controller
     {
         $postId = $request->post_id;
         $targetId = Auth::id();
+        $type     = $request->type;
 
         $post = Post::where('id', $postId)->first();
         if (!$post) {
@@ -44,6 +45,7 @@ class BookmarkController extends Controller
             Bookmark::create([
                 'user_id' => $targetId,
                 'post_id' => $postId,
+                'type'   => $type
 
             ]);
             return response()->json([
@@ -108,26 +110,22 @@ class BookmarkController extends Controller
     {
         $userId = $request->user_id ?? Auth::id();
 
-        $bookmarks_id = Bookmark::where('user_id', $userId)->pluck('post_id');
+        $bookmarks_id = Bookmark::where('user_id', $userId)->where('type', $request->type)->pluck('post_id');
 
         // Count for both types
         $restaurantCount = Post::whereIn('id', $bookmarks_id)
-            ->where('have_it', 'Restaurant')
             ->count();
 
         $homeMadeCount = Post::whereIn('id', $bookmarks_id)
-            ->where('have_it', 'Home-made')
             ->count();
 
         // Filter based on have_it
-        if ($request->have_it === 'Restaurant') {
+        if ($request->type === '1') {
             $posts = Post::whereIn('id', $bookmarks_id)
-                ->where('have_it', 'Restaurant')
                 ->latest()
                 ->paginate($request->per_page ?? 10);
-        } elseif ($request->have_it === 'Home-made') {
+        } elseif ($request->type === '2') {
             $posts = Post::whereIn('id', $bookmarks_id)
-                ->where('have_it', 'Home-made')
                 ->latest()
                 ->paginate($request->per_page ?? 10);
         } else {
@@ -154,7 +152,7 @@ class BookmarkController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Bookmarks',
-            $request->have_it == 'Restaurant'?'restaurant_count':'home_made_count' =>  $request->have_it == 'Restaurant'? $restaurantCount:$homeMadeCount,
+            $request->type == '1' ? 'restaurant_count' : 'home_made_count' =>  $request->type == '1' ? $restaurantCount : $homeMadeCount,
             'data' => $posts,
         ]);
     }
@@ -181,6 +179,25 @@ class BookmarkController extends Controller
             'status' => true,
             'message' => 'View post',
             'data' => $post
+        ]);
+    }
+
+    public function getSearchHave_it(Request $request)
+    {
+        if ($request->type == '1') {
+            $posts = Post::where('restaurant_name', 'like', '%' . $request->search_have_it . '%')
+                ->where('have_it', $request->type == '1' ? 'Restaurant' : null)
+                ->get();
+        } elseif ($request->type == '2') {
+            $posts = Post::where('restaurant_name', 'like', '%' . $request->search_have_it . '%')
+                ->where('have_it', $request->type == '2' ? 'Home-made' : null)
+                ->get();
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Search your result',
+            'data' => $posts
         ]);
     }
 }

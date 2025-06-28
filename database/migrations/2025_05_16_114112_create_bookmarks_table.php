@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->unsignedBigInteger('post_id');
+            $table->string('type')->nullable();
             $table->timestamps();
         });
     }

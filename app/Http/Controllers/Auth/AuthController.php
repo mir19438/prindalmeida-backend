@@ -33,7 +33,7 @@ class AuthController extends Controller
         ];
 
         // rear case handle
-        // $rearUser = User::where('email', $request->email)->first();
+        $rearUser = User::where('email', $request->email)->first();
 
         // if (($rearUser && $rearUser->verified_status == 'unverified')) {
 

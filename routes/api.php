@@ -79,6 +79,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/toggle-bookmark', [BookmarkController::class, 'toggleBookmark']);
         Route::get('/get-bookmarks', [BookmarkController::class, 'getBookmarks']);
         Route::get('/view-post', [BookmarkController::class, 'viewPost']);
+        Route::get('/search-have_it', [BookmarkController::class, 'getSearchHave_it']);
 
         // home
         Route::get('/discovery', [PostController::class, 'discovery']);
