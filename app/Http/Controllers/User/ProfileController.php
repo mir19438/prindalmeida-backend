@@ -7,10 +7,13 @@ use App\Models\follower;
 use App\Models\Post;
 use App\Models\RecentPost;
 use App\Models\User;
+use App\Models\UserBlock;
+use App\Models\UserReport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+
 
 class ProfileController extends Controller
 {
@@ -221,5 +224,77 @@ class ProfileController extends Controller
             'message' => $request->user_id ? 'User posts' : 'My posts',
             'data' => $my_posts
         ]);
+    }
+
+    public function userBlock(Request $request)
+    {
+        // validation roles
+        $validator = Validator::make($request->all(), [
+            'blocked_id' => 'required|numeric|exists:users,id',
+        ]);
+
+        // check validation
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message'   => $validator->errors()
+            ], 422);
+        }
+
+        $blocker_id = Auth::id();
+        $blocked_id = $request->blocked_id;
+
+        if ($blocker_id == $blocked_id) {
+            return response()->json(['message' => 'Cannot block yourself'], 422);
+        }
+
+        $alreadyBlocked = UserBlock::where('blocker_id', $blocker_id)
+            ->where('blocked_id', $blocked_id)
+            ->first();
+
+        if ($alreadyBlocked) {
+            return response()->json(['message' => 'Already blocked'], 200);
+        }
+
+        $user_block = UserBlock::create([
+            'blocker_id' => $blocker_id,
+            'blocked_id' => $blocked_id,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User blocked successfully',
+            'data' => $user_block
+        ], 201);
+    }
+
+    public function userReport(Request $request)
+    {
+        // validation roles
+        $validator = Validator::make($request->all(), [
+            'reported_id' => 'required|numeric|exists:users,id',
+            'content' => 'required|string'
+        ]);
+
+        // check validation
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message'   => $validator->errors()
+            ], 422);
+        }
+
+
+        $user_report = UserReport::create([
+            'reporter_id' => Auth::id(),
+            'reported_id' => $request->reported_id,
+            'content' => $request->content,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User report successfully',
+            'data' => $user_report
+        ], 201);
     }
 }

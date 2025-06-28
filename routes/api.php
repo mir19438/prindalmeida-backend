@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\PostManageController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserAnalyticsController;
 use App\Http\Controllers\Admin\UserManageController;
+use App\Http\Controllers\Admin\UserReportController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SendSms;
@@ -48,6 +49,11 @@ Route::middleware('auth:api')->group(function () {
 
         // profile
         Route::post('/update-admin-profile', [MyProfileController::class, 'updateAdminProfile']);
+
+        // report
+        Route::get('/get-user-report',[UserReportController::class,'userReport']);
+
+
     });
 
 
@@ -78,6 +84,9 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/discovery', [PostController::class, 'discovery']);
         Route::post('/discovery-toggle-follow', [PostController::class, 'discoveryToggleFollow']);
         Route::get('/following', [PostController::class, 'following']);
+        Route::get('/user-search', [PostController::class, 'userSearch']);
+        Route::get('/restaurant-search', [PostController::class, 'restaurantSearch']);
+
 
         // post
         Route::post('/create-post', [PostController::class, 'createPost']);
@@ -90,5 +99,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/recent-post', [ProfileController::class, 'recentPost']);
         Route::get('/get-recent-post', [ProfileController::class, 'getRecentPost']);
         Route::get('/get-my-posts', [ProfileController::class, 'getMyPosts']);
+        Route::post('/user-block', [ProfileController::class, 'userBlock']);
+        Route::post('/user-report', [ProfileController::class, 'userReport']);
+
     });
 });

@@ -33,27 +33,27 @@ class AuthController extends Controller
         ];
 
         // rear case handle
-        $rearUser = User::where('email', $request->email)->first();
+        // $rearUser = User::where('email', $request->email)->first();
 
-        if (($rearUser && $rearUser->verified_status == 'unverified')) {
+        // if (($rearUser && $rearUser->verified_status == 'unverified')) {
 
-            // update otp and otp expires
-            $rearUser->otp = $otp;
-            $rearUser->otp_expires_at = $otp_expires_at;
-            $rearUser->save();
+        //     // update otp and otp expires
+        //     $rearUser->otp = $otp;
+        //     $rearUser->otp_expires_at = $otp_expires_at;
+        //     $rearUser->save();
 
-            try {
-                Mail::to($rearUser->email)->send(new VerifyOTPMail($email_otp));
-            } catch (Exception $e) {
-                Log::error($e->getMessage());
-            }
+        //     try {
+        //         Mail::to($rearUser->email)->send(new VerifyOTPMail($email_otp));
+        //     } catch (Exception $e) {
+        //         Log::error($e->getMessage());
+        //     }
 
-            // json response
-            return response()->json([
-                'status' => true,
-                'message' => 'Your account already exists, please verify your account, check you email for OTP'
-            ], 201);
-        }
+        //     // json response
+        //     return response()->json([
+        //         'status' => true,
+        //         'message' => 'Your account already exists, please verify your account, check you email for OTP'
+        //     ], 201);
+        // }
 
         // validation roles
         $validator = Validator::make($request->all(), [

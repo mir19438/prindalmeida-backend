@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('recent_posts', function (Blueprint $table) {
+        Schema::create('user_blocks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->unsignedBigInteger('post_id');
+            $table->foreignId('blocker_id')->constrained('users')->onDelete('cascade'); // user1
+            $table->foreignId('blocked_id')->constrained('users')->onDelete('cascade'); // user2
             $table->timestamps();
         });
     }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('recent_posts');
+        Schema::dropIfExists('user_blocks');
     }
 };

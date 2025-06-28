@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Follower;
 use App\Models\Post;
 use App\Models\User;
+use App\Models\UserBlock;
 use App\Notifications\Me\NewPostCreated as MeNewPostCreated;
 use App\Notifications\NewPostCreated;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ class PostController extends Controller
             'restaurant_name' => 'nullable|string',
             'food_type'       => 'required|string',
             'location'        => 'nullable|string',
+            'lat'        => 'nullable|string',
+            'lng'        => 'nullable|string',
             'description'     => 'required|string',
             'rating'          => 'nullable|string',
             'tagged'          => 'sometimes|array',
@@ -81,6 +84,8 @@ class PostController extends Controller
             'restaurant_name'   => $request->restaurant_name ?? null,
             'food_type'   => $request->food_type,
             'location'    => $request->location ?? null,
+            'lat'    => $request->lat ?? null,
+            'lng'    => $request->lng ?? null,
             'description' => $request->description,
             'rating'      => $request->rating ?? null,
             'tagged'      => json_encode($request->tagged),
@@ -629,8 +634,11 @@ class PostController extends Controller
         //     ->orderByDesc('posts.created_at')
         //     ->paginate($perPage);
 
-        $latestPosts = Post::orderByDesc('love_reacts')
-            ->orderByDesc('created_at') // fallback, যদি love_reacts সমান হয়
+        $blockedUserIds = UserBlock::where('blocked_id', Auth::id())->pluck('blocker_id')->toArray();
+
+        $latestPosts = Post::whereNotIn('user_id', $blockedUserIds)
+            ->orderByDesc('love_reacts')
+            ->orderByDesc('created_at') // fallback, if, love_reacts is equal
             ->paginate($perPage);
 
         if ($latestPosts->isEmpty()) {
@@ -706,5 +714,125 @@ class PostController extends Controller
                 'message' => 'followed'
             ]);
         }
+    }
+
+    public function userSearch(Request $request)
+    {
+        $users = User::where('name', 'like', '%' . $request->user_name . '%')
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Search your result',
+            'data' => $users
+        ]);
+    }
+
+    public function restaurantSearch(Request $request)
+    {
+        // $locationName = $request->location;
+
+        // if (!$locationName) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Location name is required'
+        //     ]);
+        // }
+
+
+
+
+        // $lat = $request->lat;
+        // $lng = $request->lng;
+        // $radius = $request->radius; // km radius
+
+        // // Haversine formula
+        // $restaurants = Post::select('*')
+        //     ->selectRaw("(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lng) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance", [
+        //         $lat,
+        //         $lng,
+        //         $lat
+        //     ])
+        //     ->where('have_it', 'Restaurant')
+        //     ->having('distance', '<=', $radius)
+        //     ->orderBy('distance')
+        //     ->get();
+
+        // return response()->json([
+        //     'status' => true,
+        //     'message' => 'Nearby Restaurants from: ' . $locationName,
+        //     'coordinates' => ['lat' => $lat, 'lng' => $lng, 'radius' => $radius],
+        //     'data' => $restaurants,
+        // ]);
+
+        // validation roles
+        $validator = Validator::make($request->all(), [
+            'location' => 'required|string',
+            'lat' => 'required|string',
+            'lng' => 'required|string',
+            'radius' => 'sometimes|numeric',
+        ]);
+
+        // check validation
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message'   => $validator->errors()
+            ], 422);
+        }
+
+        // Optional: Limit search range in kilometers
+        $radiusInKm = $request->radius ?? 10;
+
+        // Step 1: Get coordinates from location (from posts table)
+        $centerPost = Post::where('location', 'like', "%{$request->location}%")
+            ->whereNotNull('lat')
+            ->whereNotNull('lng')
+            ->first();
+
+        if (!$centerPost) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No posts found in this location'
+            ]);
+        }
+
+        $lat = $centerPost->lat;
+        $lng = $centerPost->lng;
+
+        // Step 2: Fetch nearby restaurants using Haversine Formula
+        $restaurants = Post::select(
+            'restaurant_name',
+            'location',
+            'lat',
+            'lng',
+            DB::raw('COUNT(*) as post_count'),
+            DB::raw('AVG(rating) as average_rating'),
+            DB::raw("(
+                6371 * acos(
+                    cos(radians($lat)) * cos(radians(lat)) *
+                    cos(radians(lng) - radians($lng)) +
+                    sin(radians($lat)) * sin(radians(lat))
+                )
+            ) AS distance")
+        )
+            ->whereNotNull('restaurant_name')
+            ->where('have_it', 'Restaurant')
+            ->where('post_status', 'approved')
+            ->groupBy('restaurant_name', 'location', 'lat', 'lng')
+            ->having('distance', '<=', $radiusInKm)
+            ->orderBy('distance')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => "Nearby Restaurants from: " . $request->location,
+            'center' => [
+                'lat' => $lat,
+                'lng' => $lng,
+            ],
+            'data' => $restaurants
+        ]);
     }
 }
