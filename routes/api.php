@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 
 // public route for user
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/search-user-name', [AuthController::class, 'searchUserName']);
+Route::get('/search-user-email', [AuthController::class, 'searchUserEmail']);
+
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/login', [AuthController::class, 'login']);

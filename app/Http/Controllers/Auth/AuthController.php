@@ -93,6 +93,46 @@ class AuthController extends Controller
         ], 201);
     }
 
+    // search user name
+    public function searchUserName(Request $request)
+    {
+        $userName = User::where('user_name', 'like', '%' . $request->search_user_name . '%')
+            ->select('id', 'user_name')
+            ->get();
+
+        // Transform user_name
+        $transformed = $userName->map(function ($user) {
+            // Remove '@' if exists and split by '_'
+            $name = str_replace('@', '', $user->user_name); // remove '@'
+            $name = explode('_', $name)[0]; // get before '_'
+
+            return [
+                'id' => $user->id,
+                'user_name' => $name
+            ];
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Search your result',
+            'data' => $transformed
+        ]);
+    }
+
+    // search user email
+    public function searchUserEmail(Request $request)
+    {
+        $userEmail = User::where('email', 'like', '%' . $request->search_user_email . '%')
+            ->select('id', 'email')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Search your result',
+            'data' => $userEmail
+        ]);
+    }
+
     // verify otp
     public function verifyOtp(Request $request)
     {
