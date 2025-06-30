@@ -16,7 +16,7 @@ use App\Http\Controllers\User\PostController;
 use App\Http\Controllers\User\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('send-sms',[SendSms::class,'sendSms']);
+// Route::get('send-sms', [SendSms::class, 'sendSms']);
 
 // public route for user
 Route::post('/register', [AuthController::class, 'register']);
@@ -51,9 +51,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/update-admin-profile', [MyProfileController::class, 'updateAdminProfile']);
 
         // report
-        Route::get('/get-user-report',[UserReportController::class,'userReport']);
-
-
+        Route::get('/get-user-report', [UserReportController::class, 'userReport']);
     });
 
 
@@ -102,6 +100,5 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/get-my-posts', [ProfileController::class, 'getMyPosts']);
         Route::post('/user-block', [ProfileController::class, 'userBlock']);
         Route::post('/user-report', [ProfileController::class, 'userReport']);
-
     });
 });

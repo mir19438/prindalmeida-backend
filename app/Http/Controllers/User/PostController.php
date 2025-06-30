@@ -719,7 +719,7 @@ class PostController extends Controller
     public function userSearch(Request $request)
     {
         $users = User::where('name', 'like', '%' . $request->user_name . '%')
-            ->select('id', 'name')
+            ->select('id', 'name','avatar')
             ->get();
 
         return response()->json([
